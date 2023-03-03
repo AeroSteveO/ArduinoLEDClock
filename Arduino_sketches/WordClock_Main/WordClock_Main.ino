@@ -1,6 +1,7 @@
 
-// code includes birthday messages and also automatic daylight saving calculations.
 
+// code includes birthday messages and also automatic daylight saving calculations.
+#include <RTClib.h>
 #include <FastLED.h>
 #include <DS3232RTC.h>      // https://github.com/JChristensen/DS3232RTC
 #include <SoftwareSerial.h>
@@ -13,10 +14,12 @@ FASTLED_USING_NAMESPACE
 #define NUM_LEDS        121
 #define PHOTO_RESISTOR  A0
 #define BUTTON_PIN      2
-#define SET_TIME = "settime";
-#define ADD_BDAY = "addbday";
-#define REMOVE_BDAY = "removebday";
-#define LIST_BDAY = "listbday";
+#define SET_TIME       "settime"
+#define ADD_BDAY       "addbday"
+#define REMOVE_BDAY    "removebday"
+#define LIST_BDAY      "listbday"
+
+RTC_DS3231 RTC;
 
 CRGB leds[NUM_LEDS];
 SoftwareSerial BT(8, 9); //  pin D8 to RXD p-in D9 purple to TXD
@@ -116,7 +119,7 @@ void setup() {
   FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     
 //RTC Clock settings
-  setSyncProvider(RTC.get);   // the function to get the time from the RTC
+  setSyncProvider(getExternalTime());   // the function to get the time from the RTC
 
   //****settings to edit the time on the real time clock ******
 //setTime(12,59, 55, 05, 01, 2020);   //this sets the system time set to GMT without the daylight saving added. 
@@ -361,13 +364,13 @@ void hourAnimation() {
 //******* Brightness settings to work with the light dependent resistor ******************
 
 void brightnessSet () {
-  int ambiant_Light = analogRead(PHOTO_RESISTOR);    // read the value of the photoresisor
-  int Brightness_Set = map(ambiant_Light, 0, 500, 10, 200); // map the ambiant light value to a LED brightness value
+  int ambient_Light = analogRead(PHOTO_RESISTOR);    // read the value of the photoresisor
+  int Brightness_Set = map(ambient_Light, 0, 500, 10, 200); // map the ambiant light value to a LED brightness value
   
-  if (ambiant_Light >= 500){ 
+  if (ambient_Light >= 500){ 
     FastLED.setBrightness(200);
   }
-  if (ambiant_Light < 500){
+  if (ambient_Light < 500){
     FastLED.setBrightness(Brightness_Set);  // set the brightness of the LEDs
   }
 }
@@ -400,36 +403,36 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
 }
 
 void bluetoothCheckInput() { //If the message sent is the same as the trigger word "settime" then ask for user to enter date and time
-  if (newData == true && (strcasecmp(SET_TIME,receivedData) == 0) {
+  if (newData == true && (strcasecmp(SET_TIME,receivedData) == 0)) {
     BT.println("Set the Time & Date as: hh,mm,ss,dd,mm,yyyy");
     newData = false;
     changingTime = true; // set a switch to true that time is going to be changed
   }
   
-  if (newData == true && (strcasecmp(ADD_BDAY,receivedData) == 0){
+  if (newData == true && (strcasecmp(ADD_BDAY,receivedData) == 0)){
     newData = false;
     addingBday = true; // set a switch to true that time is going to be changed
   }
   
-  if (newData == true && (strcasecmp(REMOVE_BDAY,receivedData) == 0){
+  if (newData == true && (strcasecmp(REMOVE_BDAY,receivedData) == 0)){
     newData = false;
     removingBday = true; // set a switch to true that time is going to be changed
   }
 
-  if (newData == true && (strcasecmp(LIST_BDAY,receivedData) == 0){
+  if (newData == true && (strcasecmp(LIST_BDAY,receivedData) == 0)){
     newData = false;
     listingBday = true; // set a switch to true that time is going to be changed
   }
   
   if (newData == true && 
-      strcasecmp(SET_TIME,receivedData) != 0 && changingTime == false) &&
-      strcasecmp(ADD_BDAY,receivedData) != 0 && addingBday == false) &&
-      strcasecmp(REMOVE_BDAY,receivedData) != 0 && removingBday == false) &&
-      strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false) {
+      (strcasecmp(SET_TIME,receivedData) != 0 && changingTime == false) &&
+      (strcasecmp(ADD_BDAY,receivedData) != 0 && addingBday == false) &&
+      (strcasecmp(REMOVE_BDAY,receivedData) != 0 && removingBday == false) &&
+      (strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false)) {
     newData = false;
-    String Cmd = (String)"Command not recognised ("+ a + ")"; // if the user input isnt same as trigger word then inform user command not recognised
-    BT.println(String("Command not recognised: ") + String(recievedData));
-    BT.println(String("Avaliable commands: ");
+    String Cmd = (String)"Command not recognised ("+ receivedData + ")"; // if the user input isnt same as trigger word then inform user command not recognised
+    BT.println(String("Command not recognised: ") + String(receivedData));
+    BT.println(String("Avaliable commands: "));
     BT.println(String(SET_TIME));
     BT.println(String(ADD_BDAY));
     BT.println(String(REMOVE_BDAY));
@@ -459,7 +462,7 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     long yyyy = atol(strings[5]);
   
     setTime(hr,mm,ss,dd,mth,yyyy);   //this sets the system time set to GMT without the daylight saving added. 
-    RTC.set(now());
+    RTC.adjust(now());
     
     String Dateset =  (String)dd+"/"+mth+"/"+yyyy;  //create a string to update user interface to bluetooth 
     String Timeset = (String)hr+":"+mm+":"+ss;
