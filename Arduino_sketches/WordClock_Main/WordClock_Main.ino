@@ -502,30 +502,30 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
 }
 
 void bluetoothCheckInput() { //If the message sent is the same as the trigger word "settime" then ask for user to enter date and time
-String data = String(receivedData);
-String(data).trim();
+  String data = String(receivedData);
+  data.trim();
 
-if (newData == true) {
-  BT.println(String("'") + data + String("'"));
-}
+  if (newData == true) {
+    BT.println(String("'") + data + String("'"));
+  }
 
-  if (newData == true && (String(SET_TIME).equalsIgnoreCase(data))) {
+  if (newData == true && String(SET_TIME).equalsIgnoreCase(data)) {
     BT.println("Set the Time & Date as: hh,mm,ss,dd,mm,yyyy");
     newData = false;
     changingTime = true; // set a switch to true that time is going to be changed
   }
 
-  if (newData == true && (String(ADD_BDAY).equalsIgnoreCase(data))) {
+  if (newData == true && String(ADD_BDAY).equalsIgnoreCase(data)) {
     newData = false;
     addingBday = true; // set a switch to true that time is going to be changed
   }
   
-  if (newData == true && (String(REMOVE_BDAY).equalsIgnoreCase(data))) {
+  if (newData == true && String(REMOVE_BDAY).equalsIgnoreCase(data)) {
     newData = false;
     removingBday = true; // set a switch to true that time is going to be changed
   }
 
-  if (newData == true && (String(LIST_BDAY).equalsIgnoreCase(data))) {
+  if (newData == true && String(LIST_BDAY).equalsIgnoreCase(data)) {
     newData = false;
     listingBday = true; // set a switch to true that time is going to be changed
   }
