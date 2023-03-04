@@ -479,6 +479,7 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
   static byte ndx = 0;
   char endMarker = '\n';
   char rc;
+  bool foundAllChars = false;
   
   while (BT.available() > 0 && newData == false) {    //create a char array untill you get a /n signal from bluetooth
     rc = BT.read();
@@ -488,9 +489,11 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
       ndx++;
       if (ndx >= NUM_CHARS) {
         ndx = NUM_CHARS - 1;
+        foundAllChars = true;
       }
     }
-    else {
+
+    if (rc == endMarker || foundAllChars) {
       receivedData[ndx] = '\0'; // terminate the string
       ndx = 0;
       newData = true;
@@ -499,36 +502,36 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
 }
 
 void bluetoothCheckInput() { //If the message sent is the same as the trigger word "settime" then ask for user to enter date and time
+String data = String(receivedData);
+String(data).trim();
+
 if (newData == true) {
-  BT.println(String("'") + String(receivedData) + String("'"));
+  BT.println(String("'") + String(data) + String("'"));
 }
 
-  if (newData == true && (strcasecmp(SET_TIME,receivedData) == 0)) {
+  if (newData == true && (String(SET_TIME).equalsIgnoreCase(data))) {
     BT.println("Set the Time & Date as: hh,mm,ss,dd,mm,yyyy");
     newData = false;
     changingTime = true; // set a switch to true that time is going to be changed
   }
 
-  if (newData == true && (strcasecmp(ADD_BDAY,receivedData) == 0)){
+  if (newData == true && (String(ADD_BDAY).equalsIgnoreCase(data))) {
     newData = false;
     addingBday = true; // set a switch to true that time is going to be changed
   }
   
-  if (newData == true && (strcasecmp(REMOVE_BDAY,receivedData) == 0)){
+  if (newData == true && (String(REMOVE_BDAY).equalsIgnoreCase(data))) {
     newData = false;
     removingBday = true; // set a switch to true that time is going to be changed
   }
 
-  if (newData == true && (strcasecmp(LIST_BDAY,receivedData) == 0)){
+  if (newData == true && (String(LIST_BDAY).equalsIgnoreCase(data))) {
     newData = false;
     listingBday = true; // set a switch to true that time is going to be changed
   }
   
-  if (newData == true && 
-      strcasecmp(SET_TIME,receivedData) != 0 && changingTime == false &&
-      strcasecmp(ADD_BDAY,receivedData) != 0 && addingBday == false &&
-      strcasecmp(REMOVE_BDAY,receivedData) != 0 && removingBday == false &&
-      strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false) {
+  if (newData == true && changingTime == false && addingBday == false &&
+      removingBday == false && listingBday == false) {
     newData = false;
     String Cmd = (String)"Command not recognised ("+ receivedData + ")"; // if the user input isnt same as trigger word then inform user command not recognised
     BT.println(Cmd);
