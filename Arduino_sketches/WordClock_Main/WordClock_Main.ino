@@ -19,6 +19,7 @@ FASTLED_USING_NAMESPACE
 #define REMOVE_BDAY    "removebday"
 #define LIST_BDAY      "listbday"
 #define BLE_BUFFER_LENGTH 100
+#define NUM_CHARS         35
 
 RTC_DS3231 RTC;
 
@@ -35,8 +36,7 @@ int timeout = 1500;          // Wait 800ms each time for BLE to response, depend
 
 char buffer[BLE_BUFFER_LENGTH];       // Buffer to store response
 
-const byte numChars = 35;
-char receivedData[numChars];   // an array to store the received data
+char receivedData[NUM_CHARS];   // an array to store the received data
 
 bool changingTime = false;
 bool addingBday = false;
@@ -486,8 +486,8 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
     if (rc != endMarker) {
       receivedData[ndx] = rc;
       ndx++;
-      if (ndx >= numChars) {
-        ndx = numChars - 1;
+      if (ndx >= NUM_CHARS) {
+        ndx = NUM_CHARS - 1;
       }
     }
     else {
@@ -531,7 +531,7 @@ if (newData == true) {
       strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false) {
     newData = false;
     String Cmd = (String)"Command not recognised ("+ receivedData + ")"; // if the user input isnt same as trigger word then inform user command not recognised
-    BT.println(String("Command not recognised: ") + String(receivedData));
+    BT.println(Cmd);
     BT.println(String("Avaliable commands: "));
     BT.println(String(SET_TIME));
     BT.println(String(ADD_BDAY));
