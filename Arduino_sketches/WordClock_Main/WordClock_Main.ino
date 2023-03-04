@@ -18,7 +18,7 @@ FASTLED_USING_NAMESPACE
 #define ADD_BDAY       "addbday"
 #define REMOVE_BDAY    "removebday"
 #define LIST_BDAY      "listbday"
-#define BUFFER_LENGTH 100
+#define BLE_BUFFER_LENGTH 100
 
 RTC_DS3231 RTC;
 
@@ -32,18 +32,20 @@ uint8_t colour_hue = 35;
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 int timeout = 1500;          // Wait 800ms each time for BLE to response, depending on your application, adjust this value accordingly
-long bauds[] = {9600, 57600, 115200, 38400, 2400, 4800, 19200}; // common baud rates, when using HM-10 module with SoftwareSerial, try not to go over 57600
 
-char buffer[BUFFER_LENGTH];       // Buffer to store response
+char buffer[BLE_BUFFER_LENGTH];       // Buffer to store response
 
 const byte numChars = 35;
 char receivedData[numChars];   // an array to store the received data
 
-boolean changingTime = false;
-boolean addingBday = false;
-boolean removingBday = false;
-boolean listingBday = false;
-boolean newData = false;
+bool changingTime = false;
+bool addingBday = false;
+bool removingBday = false;
+bool listingBday = false;
+bool newData = false;
+
+long previousMillis = 0;
+long interval = 500; //how long in milli seconds to update clock
 
 
 // arrays for the LEDs
@@ -109,8 +111,6 @@ uint8_t hourArray[][7] = {
                         
 uint8_t hourLengths[] = {6,3,3,5,4,4,3,5,5,4,3,6,6,3,3,5,4,4,3,5,5,4,3,6,6}; // this is the size of each of the above arrays for indexing the hourarray later in script                       
 
-long previousMillis = 0;
-long interval = 500; //how long in milli seconds to update clock
 
 // settings to implement on startup
 
@@ -125,7 +125,7 @@ void setup() {
   //RTC Clock settings
   if (! RTC.begin()) {
     Serial.println("Couldn't find RTC");
-    while(1);
+    while(1) {};
   }
   if (RTC.lostPower()) {
     Serial.println("RTC lost power, lets set the time!");
@@ -152,12 +152,14 @@ void setup() {
     while (1) {};         // No BLE found, just going to stop here
   }
 
-  BT.begin(baudrate);
+  //BT.begin(baudrate);
   BT.println("Connected to WordClock");
   BLECmd(timeout,"AT+NAMEWordClock",buffer); // Set the name of the module to HM10
 
 }
+
 long BLEAutoBaud() {
+  long bauds[] = {9600, 57600, 115200, 38400, 2400, 4800, 19200}; // common baud rates, when using HM-10 module with SoftwareSerial, try not to go over 57600
   int baudcount = sizeof(bauds) / sizeof(long);
   for (int i = 0; i < baudcount; i++) {
     for (int x = 0; x < 3; x++) { // test at least 3 times for each baud
@@ -172,7 +174,8 @@ long BLEAutoBaud() {
   }
   return -1;
 }
-boolean BLEIsReady() {
+
+bool BLEIsReady() {
   BLECmd(timeout, "AT" , buffer);   // Send AT and store response to buffer
   if (strcmp(buffer, "OK") == 0) {
     return true;
@@ -180,9 +183,10 @@ boolean BLEIsReady() {
     return false;
   }
 }
-boolean BLECmd(long timeout, char* command, char* temp) {
+
+bool BLECmd(long timeout, char* command, char* temp) {
   long endtime;
-  boolean found = false;
+  bool found = false;
   endtime = millis() + timeout; //
   memset(temp, 0, 100);       // clear buffer
   found = true;
@@ -208,7 +212,7 @@ boolean BLECmd(long timeout, char* command, char* temp) {
       // Serial.print((char)a); // Uncomment this to see raw data from BLE
       temp[i] = a;        // save data to buffer
       i++;
-      if (i >= BUFFER_LENGTH) break; // prevent buffer overflow, need to break
+      if (i >= BLE_BUFFER_LENGTH) break; // prevent buffer overflow, need to break
       delay(1);           // give it a 2ms delay before reading next character
     }
     Serial.print("BLE reply    = ");
