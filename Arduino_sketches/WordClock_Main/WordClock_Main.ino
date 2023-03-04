@@ -499,14 +499,16 @@ void bluetoothGetInput() { //take the message set by bluetooth and then add all 
 }
 
 void bluetoothCheckInput() { //If the message sent is the same as the trigger word "settime" then ask for user to enter date and time
+if (newData == true) {
+  BT.println(String("'") + String(receivedData) + String("'"));
+}
+
   if (newData == true && (strcasecmp(SET_TIME,receivedData) == 0)) {
     BT.println("Set the Time & Date as: hh,mm,ss,dd,mm,yyyy");
     newData = false;
     changingTime = true; // set a switch to true that time is going to be changed
   }
 
-  BT.println(String("'") + String(receivedData) + String("'"));
-  
   if (newData == true && (strcasecmp(ADD_BDAY,receivedData) == 0)){
     newData = false;
     addingBday = true; // set a switch to true that time is going to be changed
