@@ -8,7 +8,7 @@
 
 FASTLED_USING_NAMESPACE
 
-#define DATA_PIN        6
+#define LED_DATA_PIN        6
 #define LED_TYPE        WS2811
 #define COLOR_ORDER     GRB
 #define NUM_LEDS        121
@@ -18,6 +18,7 @@ FASTLED_USING_NAMESPACE
 #define ADD_BDAY       "addbday"
 #define REMOVE_BDAY    "removebday"
 #define LIST_BDAY      "listbday"
+#define BUFFER_LENGTH 100
 
 RTC_DS3231 RTC;
 
@@ -30,6 +31,10 @@ uint8_t Hour_DST;
 uint8_t colour_hue = 35;
 uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
+int timeout = 1500;          // Wait 800ms each time for BLE to response, depending on your application, adjust this value accordingly
+long bauds[] = {9600, 57600, 115200, 38400, 2400, 4800, 19200}; // common baud rates, when using HM-10 module with SoftwareSerial, try not to go over 57600
+
+char buffer[BUFFER_LENGTH];       // Buffer to store response
 
 const byte numChars = 35;
 char receivedData[numChars];   // an array to store the received data
@@ -110,27 +115,99 @@ long interval = 500; //how long in milli seconds to update clock
 // settings to implement on startup
 
 void setup() { 
-
-//Pin Settings
+  //Pin Settings
   pinMode(PHOTO_RESISTOR, INPUT);// Set photo resistor
   pinMode(BUTTON_PIN, INPUT); //set a button - for changing colour
     
-//LED settings
-  FastLED.addLeds<LED_TYPE,DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
+  //LED settings
+  FastLED.addLeds<LED_TYPE,LED_DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     
-//RTC Clock settings
+  //RTC Clock settings
   setSyncProvider(getExternalTime());   // the function to get the time from the RTC
 
   //****settings to edit the time on the real time clock ******
-//setTime(12,59, 55, 05, 01, 2020);   //this sets the system time set to GMT without the daylight saving added. 
-//RTC.set(now());   //sets time onto the RTC. Make sure to comment this out and then re-upload after setting the RTC. -- (setTime() and now() are Part of the Time Library)
+  //setTime(12,59, 55, 05, 01, 2020);   //this sets the system time set to GMT without the daylight saving added. 
+  //RTC.set(now());   //sets time onto the RTC. Make sure to comment this out and then re-upload after setting the RTC. -- (setTime() and now() are Part of the Time Library)
   //**** Un-comment above 2 lines to set the time and load onto chip then comment out the lines and re-load onto the chip********
+  long baudrate = BLEAutoBaud();
 
-BT.begin(9600);
-BT.println("Connected to WordClock");
-    
+  if (baudrate > 0) {
+    Serial.print("Found BLE baud rate ");
+    Serial.println(baudrate);
+  } else {
+    Serial.println("No BLE detected.");
+    while (1) {};         // No BLE found, just going to stop here
+  }
+
+  BT.begin(9600);
+  BT.println("Connected to WordClock");
 }
+long BLEAutoBaud() {
+  int baudcount = sizeof(bauds) / sizeof(long);
+  for (int i = 0; i < baudcount; i++) {
+    for (int x = 0; x < 3; x++) { // test at least 3 times for each baud
+      
+      Serial.print("Testing baud ");
+      Serial.println(bauds[i]);
+      BT.begin(bauds[i]);
+      if (BLEIsReady()) {
+        return bauds[i];
+      }
+    }
+  }
+  return -1;
+}
+boolean BLEIsReady() {
+  BLECmd(timeout, "AT" , buffer);   // Send AT and store response to buffer
+  if (strcmp(buffer, "OK") == 0) {
+    return true;
+  } else {
+    return false;
+  }
+}
+boolean BLECmd(long timeout, char* command, char* temp) {
+  long endtime;
+  boolean found = false;
+  endtime = millis() + timeout; //
+  memset(temp, 0, 100);       // clear buffer
+  found = true;
+  Serial.print("Arduino send = ");
+  Serial.println(command);
+  BT.print(command);
 
+  // The loop below wait till either a response is received or timeout
+  // The problem with this BLE Shield is most of the HM-10 modules do not response with CR LF at the end of the response,
+  // so a timeout is required to detect end of response and also prevent the loop locking up.
+
+  while (!BT.available()) {
+    if (millis() > endtime) {   // timeout, break
+      found = false;
+      break;
+    }
+  }
+
+  if (found) {            // response is available
+    int i = 0;
+    while (BT.available()) {   // loop and read the data
+      char a = BT.read();
+      // Serial.print((char)a); // Uncomment this to see raw data from BLE
+      temp[i] = a;        // save data to buffer
+      i++;
+      if (i >= BUFFER_LENGTH) break; // prevent buffer overflow, need to break
+      delay(1);           // give it a 2ms delay before reading next character
+    }
+    Serial.print("BLE reply    = ");
+    Serial.println(temp);
+    while ((strlen(temp) > 0) && ((temp[strlen(temp) - 1] == 10) || (temp[strlen(temp) - 1] == 13)))
+    {
+      temp[strlen(temp) - 1] = 0;
+    }
+    return true;
+  } else {
+    Serial.println("BLE timeout!");
+    return false;
+  }
+}
 
 void loop() {
   //bluetooth settings
@@ -159,7 +236,7 @@ void loop() {
 
 
 void Clockset(){
-// ********************* Calculate offset for Daylight saving hours (UK) *********************
+  // ********************* Calculate offset for Daylight saving hours (UK) *********************
   int y = year();                          // year in 4 digit format
   uint8_t Mar_x = 31 - (4 + 5*y/4) % 7;      // will find the day of the last sunday in march
   uint8_t Oct_x = 31 - (1 + 5*y/4) % 7;       // will find the day of the last sunday in Oct
