@@ -506,7 +506,7 @@ String data = String(receivedData);
 String(data).trim();
 
 if (newData == true) {
-  BT.println(String("'") + String(data) + String("'"));
+  BT.println(String("'") + data + String("'"));
 }
 
   if (newData == true && (String(SET_TIME).equalsIgnoreCase(data))) {
@@ -533,7 +533,7 @@ if (newData == true) {
   if (newData == true && changingTime == false && addingBday == false &&
       removingBday == false && listingBday == false) {
     newData = false;
-    String Cmd = (String)"Command not recognised ("+ receivedData + ")"; // if the user input isnt same as trigger word then inform user command not recognised
+    String Cmd = (String)"Command not recognised ("+ data + ")"; // if the user input isnt same as trigger word then inform user command not recognised
     BT.println(Cmd);
     BT.println(String("Avaliable commands: "));
     BT.println(String(SET_TIME));
