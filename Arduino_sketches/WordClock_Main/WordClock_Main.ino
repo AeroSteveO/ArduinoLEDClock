@@ -123,6 +123,19 @@ void setup() {
   FastLED.addLeds<LED_TYPE,LED_DATA_PIN,COLOR_ORDER>(leds, NUM_LEDS).setCorrection(TypicalLEDStrip);
     
   //RTC Clock settings
+  if (! RTC.begin()) {
+    Serial.println("Couldn't find RTC");
+    while(1);
+  }
+  if (RTC.lostPower()) {
+    Serial.println("RTC lost power, lets set the time!");
+    // following line sets the RTC to the date & time this sketch was compiled
+    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // This line sets the RTC with an explicit date & time, for example to set
+    // January 21, 2014 at 3am you would call:
+    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
+  }
+
   setSyncProvider(getExternalTime());   // the function to get the time from the RTC
 
   //****settings to edit the time on the real time clock ******
@@ -139,8 +152,10 @@ void setup() {
     while (1) {};         // No BLE found, just going to stop here
   }
 
-  BT.begin(9600);
+  BT.begin(baudrate);
   BT.println("Connected to WordClock");
+  BLECmd(timeout,"AT+NAMEWordClock",buffer); // Set the name of the module to HM10
+
 }
 long BLEAutoBaud() {
   int baudcount = sizeof(bauds) / sizeof(long);
@@ -485,6 +500,8 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     newData = false;
     changingTime = true; // set a switch to true that time is going to be changed
   }
+
+  BT.println(String("'") + String(receivedData) + String("'"));
   
   if (newData == true && (strcasecmp(ADD_BDAY,receivedData) == 0)){
     newData = false;
@@ -502,10 +519,10 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
   }
   
   if (newData == true && 
-      (strcasecmp(SET_TIME,receivedData) != 0 && changingTime == false) &&
-      (strcasecmp(ADD_BDAY,receivedData) != 0 && addingBday == false) &&
-      (strcasecmp(REMOVE_BDAY,receivedData) != 0 && removingBday == false) &&
-      (strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false)) {
+      strcasecmp(SET_TIME,receivedData) != 0 && changingTime == false &&
+      strcasecmp(ADD_BDAY,receivedData) != 0 && addingBday == false &&
+      strcasecmp(REMOVE_BDAY,receivedData) != 0 && removingBday == false &&
+      strcasecmp(LIST_BDAY,receivedData) != 0 && listingBday == false) {
     newData = false;
     String Cmd = (String)"Command not recognised ("+ receivedData + ")"; // if the user input isnt same as trigger word then inform user command not recognised
     BT.println(String("Command not recognised: ") + String(receivedData));
