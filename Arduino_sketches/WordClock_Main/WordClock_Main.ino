@@ -510,30 +510,58 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
 
  void bluetoothChangeTime(){  
   if (newData == true && changingTime == true){ // if a new message has been recieved and the Change time switch is active change the time
-    char *strings[10];    //following code parses out the date based on being delimited by commas fullstops etc. this gives 
-    char *ptr = NULL;
-    byte index = 0;
-    
-    ptr = strtok(receivedData, " :/,.");  // takes a list of delimiters 
-    
-    while(ptr != NULL){
-        strings[index] = ptr;
-        index++;
-        ptr = strtok(NULL, " :/,.");  // takes a list of delimiters
+
+    String timeStrings[6];
+    int StringCount = 0;
+    String data = String(receivedData);
+    data.trim();
+
+    while (data.length() > 0)
+    {
+      int index = data.indexOf(' ');
+      if (index == -1) // No space found
+      {
+        timeStrings[StringCount++] = data;
+        break;
+      }
+      else
+      {
+        timeStrings[StringCount++] = data.substring(0, index);
+        data = data.substring(index+1);
+      }
     }
+
+
+    // char *strings[10];    //following code parses out the date based on being delimited by commas fullstops etc. this gives 
+    // char *ptr = NULL;
+    // byte index = 0;
+    
+    // ptr = strtok(receivedData, " :/,.");  // takes a list of delimiters 
+    
+    // for (int i = 0; i < data.length(), i++) {
+    //   if (data.charAt(i) == ',') {
+        
+    //   }
+    // }
+
+    // while(ptr != NULL){
+    //     strings[index] = ptr;
+    //     index++;
+    //     ptr = strtok(NULL, " :/,.");  // takes a list of delimiters
+    // }
   
-    long hr = atol(strings[0]); // take the parsed date from array which corresponds to hour minute seconds ect. 
-    long mm = atol(strings[1]);
-    long ss = atol(strings[2]);
-    long dd = atol(strings[3]);
-    long mth = atol(strings[4]);
-    long yyyy = atol(strings[5]);
+    long hour = timeStrings[0].toInt(); // take the parsed date from array which corresponds to hour minute seconds ect. 
+    long minute = timeStrings[1].toInt();
+    long second = timeStrings[2].toInt();
+    long day = timeStrings[3].toInt();
+    long month = timeStrings[4].toInt();
+    long year = timeStrings[5].toInt();
   
-    setTime(hr,mm,ss,dd,mth,yyyy);   //this sets the system time set to GMT without the daylight saving added. 
+    setTime(hour,minute,second,day,month,year);   //this sets the system time set to GMT without the daylight saving added. 
     RTC.adjust(now());
     
-    String Dateset =  (String)dd+"/"+mth+"/"+yyyy;  //create a string to update user interface to bluetooth 
-    String Timeset = (String)hr+":"+mm+":"+ss;
+    String Dateset =  (String)day+"/"+month+"/"+year;  //create a string to update user interface to bluetooth 
+    String Timeset = (String)hour+":"+minute+":"+second;
     
     BT.println("Time set as: " + Timeset);
     BT.println("Date set as: " + Dateset);
