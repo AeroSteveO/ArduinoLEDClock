@@ -518,7 +518,7 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
 
     while (data.length() > 0)
     {
-      int index = data.indexOf(' ');
+      int index = data.indexOf(',');
       if (index == -1) // No space found
       {
         timeStrings[StringCount++] = data;
@@ -530,32 +530,13 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
         data = data.substring(index+1);
       }
     }
-
-
-    // char *strings[10];    //following code parses out the date based on being delimited by commas fullstops etc. this gives 
-    // char *ptr = NULL;
-    // byte index = 0;
-    
-    // ptr = strtok(receivedData, " :/,.");  // takes a list of delimiters 
-    
-    // for (int i = 0; i < data.length(), i++) {
-    //   if (data.charAt(i) == ',') {
-        
-    //   }
-    // }
-
-    // while(ptr != NULL){
-    //     strings[index] = ptr;
-    //     index++;
-    //     ptr = strtok(NULL, " :/,.");  // takes a list of delimiters
-    // }
   
-    long hour = timeStrings[0].toInt(); // take the parsed date from array which corresponds to hour minute seconds ect. 
-    long minute = timeStrings[1].toInt();
-    long second = timeStrings[2].toInt();
-    long day = timeStrings[3].toInt();
-    long month = timeStrings[4].toInt();
-    long year = timeStrings[5].toInt();
+    int hour = timeStrings[0].toInt(); // take the parsed date from array which corresponds to hour minute seconds ect. 
+    int minute = timeStrings[1].toInt();
+    int second = timeStrings[2].toInt();
+    int day = timeStrings[3].toInt();
+    int month = timeStrings[4].toInt();
+    int year = timeStrings[5].toInt();
   
     setTime(hour,minute,second,day,month,year);   //this sets the system time set to GMT without the daylight saving added. 
     RTC.adjust(now());
@@ -563,9 +544,10 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     String Dateset =  (String)day+"/"+month+"/"+year;  //create a string to update user interface to bluetooth 
     String Timeset = (String)hour+":"+minute+":"+second;
     
+    BT.println("Success");
     BT.println("Time set as: " + Timeset);
     BT.println("Date set as: " + Dateset);
-        
+    
     newData = false;
     changingTime = false;
   }
