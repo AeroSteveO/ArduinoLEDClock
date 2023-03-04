@@ -142,47 +142,12 @@ void setup() {
   //setTime(12,59, 55, 05, 01, 2020);   //this sets the system time set to GMT without the daylight saving added. 
   //RTC.set(now());   //sets time onto the RTC. Make sure to comment this out and then re-upload after setting the RTC. -- (setTime() and now() are Part of the Time Library)
   //**** Un-comment above 2 lines to set the time and load onto chip then comment out the lines and re-load onto the chip********
-  // long baudrate = BLEAutoBaud();
-
-  // if (baudrate > 0) {
-  //   Serial.print("Found BLE baud rate ");
-  //   Serial.println(baudrate);
-  // } else {
-  //   Serial.println("No BLE detected.");
-  //   while (1) {};         // No BLE found, just going to stop here
-  // }
 
   BT.begin(9600);
   BT.println("Connected to WordClock");
   BLECmd(timeout,"AT+NAMEWordClock",buffer); // Set the name of the module to HM10
 
 }
-
-// long BLEAutoBaud() {
-//   long bauds[] = {9600, 57600, 115200, 38400, 2400, 4800, 19200}; // common baud rates, when using HM-10 module with SoftwareSerial, try not to go over 57600
-//   int baudcount = sizeof(bauds) / sizeof(long);
-//   for (int i = 0; i < baudcount; i++) {
-//     for (int x = 0; x < 3; x++) { // test at least 3 times for each baud
-      
-//       Serial.print("Testing baud ");
-//       Serial.println(bauds[i]);
-//       BT.begin(bauds[i]);
-//       if (BLEIsReady()) {
-//         return bauds[i];
-//       }
-//     }
-//   }
-//   return -1;
-// }
-
-// bool BLEIsReady() {
-//   BLECmd(timeout, "AT" , buffer);   // Send AT and store response to buffer
-//   if (strcmp(buffer, "OK") == 0) {
-//     return true;
-//   } else {
-//     return false;
-//   }
-// }
 
 bool BLECmd(long timeout, char* command, char* temp) {
   long endtime;
