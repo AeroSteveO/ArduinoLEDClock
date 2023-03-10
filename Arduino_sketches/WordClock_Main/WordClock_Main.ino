@@ -65,51 +65,53 @@ enum wordLEDs {
 };
 
 uint8_t wordArray[][11] = {
-  {119,118,116,115},
-  {83,84,85,86},
-  {91,90,89},
-  {102,103,104,105,106,107,108},
-  {97,96,95,94,93,92},
-  {83,84,85,86,92,93,94,95,96,97},
-  {78,79,80,81},
-  {70,69,68,67},
-  {56,57},
-  {5,4,3,2,1,0},
-  {55,76,77,98,99},
-  {43,44,65,66,87,88,109,110}
+  {111,112,114,115}, // it is
+  {81,80,79,78},     // five
+  {95,96,97},        // ten
+  {100,101,102,103,104,105,106}, // quarter
+  {89,90,91,92,93,94}, // twenty
+  {83,84,85,86,92,93,94,95,96,97}, // twenty five
+  {83,84,85,86},    // half
+  {72,73,74,75},    // past
+  {63,64},          // to
+  {5,6,7,8,9,10},   // oclock
+  {55,76,77,98,99}, // happy
+  {43,44,65,66,87,88,109,110} // birthday
 };
 
 uint8_t wordLengths[] = {4,4,3,7,6,10,4,4,2,6,5,8}; // this is the size of each of the above arrays for indexing the hourarray later in script                       
 
+// this outlnes which LEDs to light up, 0-24 arrays, 0 being twleve 1=one 2=two... 24=twelve
 uint8_t hourArray[][7] = { 
-  {59,60,61,62,63,64}, // this outlnes which LEDs to light up, 0-24 arrays, 0 being twleve 1=one 2=two... 24=twelve
-  {36,37,38},
-  {34,35,36},
-  {31,30,29,28,27},
-  {13,14,15,16},
-  {54,53,52,51},
-  {9,8,7},
-  {17,18,19,20,21},
-  {51,50,49,48,47},
-  {39,40,41,42},
-  {47,46,45},
-  {27,26,25,24,23,22},
-  {59,60,61,62,63,64},
-  {36,37,38},
-  {34,35,36},
-  {31,30,29,28,27},
-  {13,14,15,16},
-  {54,53,52,51},
-  {9,8,7},
-  {17,18,19,20,21},
-  {51,50,49,48,47},
-  {39,40,41,42},
-  {47,46,45},
-  {27,26,25,24,23,22},
-  {59,60,61,62,63,64}
+  {61,60,59,58,57,56}, // 12
+  {40,39,38},       // 1
+  {40,41,42},       // 2
+  {23,24,25,26,27}, // 3
+  {16,17,18,19},    // 4
+  {44,45,46,47},    // 5
+  {1,2,3},          // 6
+  {11,12,13,14,15}, // 7
+  {51,50,49,48,47}, // 8
+  {37,36,35,34},    // 9
+  {51,52,53},       // 10
+  {27,28,29,30,31,32}, // 11
+  {61,60,59,58,57,56}, // 12
+  {40,39,38},       // 1
+  {40,41,42},       // 2
+  {23,24,25,26,27}, // 3
+  {16,17,18,19},    // 4
+  {44,45,46,47},    // 5
+  {1,2,3},          // 6
+  {11,12,13,14,15}, // 7
+  {51,50,49,48,47}, // 8
+  {37,36,35,34},    // 9
+  {51,52,53},       // 10
+  {27,28,29,30,31,32}, // 11
+  {61,60,59,58,57,56} // 12
 };
-                        
-uint8_t hourLengths[] = {6,3,3,5,4,4,3,5,5,4,3,6,6,3,3,5,4,4,3,5,5,4,3,6,6}; // this is the size of each of the above arrays for indexing the hourarray later in script                       
+                    //  12 1 2 3 4 5 6 7 8 9 0 11
+uint8_t hourLengths[] = {6,3,3,5,4,4,3,5,5,4,3,6,
+                         6,3,3,5,4,4,3,5,5,4,3,6,6}; // this is the size of each of the above arrays for indexing the hourarray later in script                       
 
 
 // settings to implement on startup
@@ -541,12 +543,12 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     setTime(hour,minute,second,day,month,year);   //this sets the system time set to GMT without the daylight saving added. 
     RTC.adjust(now());
     
-    String Dateset =  (String)day+"/"+month+"/"+year;  //create a string to update user interface to bluetooth 
-    String Timeset = (String)hour+":"+minute+":"+second;
+    //String Dateset =  (String)day+"/"+month+"/"+year;  //create a string to update user interface to bluetooth 
+    //String Timeset = (String)hour+":"+minute+":"+second;
     
     BT.println("Success");
-    BT.println("Time set as: " + Timeset);
-    BT.println("Date set as: " + Dateset);
+   // BT.println("Time set as: %d:%d:%d", hour, minute, second);
+   // BT.println("Date set as: %d/%d/%d",day, month, year);
     
     newData = false;
     changingTime = false;
