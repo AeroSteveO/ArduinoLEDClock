@@ -129,14 +129,6 @@ void setup() {
     Serial.println("Couldn't find RTC");
     while(1) {};
   }
-  if (RTC.lostPower()) {
-    Serial.println("RTC lost power, lets set the time!");
-    // following line sets the RTC to the date & time this sketch was compiled
-    RTC.adjust(DateTime(F(__DATE__), F(__TIME__)));
-    // This line sets the RTC with an explicit date & time, for example to set
-    // January 21, 2014 at 3am you would call:
-    // rtc.adjust(DateTime(2014, 1, 21, 3, 0, 0));
-  }
 
   setSyncProvider(getExternalTime());   // the function to get the time from the RTC
 
@@ -223,78 +215,79 @@ void loop() {
 
 void Clockset(){
   // ********************* Calculate offset for Daylight saving hours (UK) *********************
-  int y = year();                          // year in 4 digit format
+  DateTime now = RTC.now();
+  int y = now.year();                          // year in 4 digit format
   uint8_t Mar_x = 31 - (4 + 5*y/4) % 7;      // will find the day of the last sunday in march
   uint8_t Oct_x = 31 - (1 + 5*y/4) % 7;       // will find the day of the last sunday in Oct
   uint8_t DST;
                                              
   // *********** Test DST: BEGINS on last Sunday of March @ 2:00 AM *********
-  if(month() == 3 && day() == Mar_x && hour() >= 2) {                                   
+  if(now.month() == 3 && now.day() == Mar_x && now.hour() >= 2) {                                   
       DST = 1;                           // Daylight Savings Time is TRUE (add one hour)
      }
      
-  if((month() == 3 && day() > Mar_x) || month() > 3) {
+  if((now.month() == 3 && now.day() > Mar_x) || now.month() > 3) {
       DST = 1;
      }
      
   // ************* Test DST: ENDS on Last Sunday of Oct @ 2:00 AM ************  
-  if(month() == 10 && day() == Oct_x && hour() >= 2) {
+  if(now.month() == 10 && now.day() == Oct_x && now.hour() >= 2) {
       DST = 0;                            // daylight savings time is FALSE (Standard time)
      }
      
-  if((month() == 10 && day() > Oct_x) || month() > 10 || month() < 3 || month() == 3 && day() < Mar_x || month() == 3 && day() == Mar_x && hour() < 2) {
+  if((now.month() == 10 && now.day() > Oct_x) || now.month() > 10 || now.month() < 3 || now.month() == 3 && now.day() < Mar_x || now.month() == 3 && now.day() == Mar_x && now.hour() < 2) {
       DST = 0;
      }
   
-  Hour_DST = hour()+DST; //Add the DST to the hour to get correct DST
+  Hour_DST = now.hour()+DST; //Add the DST to the hour to get correct DST
   
-  if(hour() == 23 && DST == 1) {
+  if(now.hour() == 23 && DST == 1) {
     Hour_DST = 00;
   }
   
   // ********************************************************************************
   // the first 8 seconds of the hour is a special animation if its past this time set time as normal
   
-  if (minute() ==00  && second() > 8 || minute() >00)  {     
+  if (now.minute() ==00  && now.second() > 8 || now.minute() >00)  {     
     FastLED.clear (); // reset the LEDs prevents old times staying lit up 
     
     lightWordLEDs(ITS); // light up Its LEDs
     
-    if (minute() >= 5 && minute() < 10 || minute() >= 55 && minute() < 60) {
+    if (now.minute() >= 5 && now.minute() < 10 || now.minute() >= 55 && now.minute() < 60) {
       lightWordLEDs(FIVE);    // if functions to set the time minutes
     }
     
-    if (minute() >= 10 && minute() < 15 || minute() >= 50 && minute() < 55) { 
+    if (now.minute() >= 10 && now.minute() < 15 || now.minute() >= 50 && now.minute() < 55) { 
       lightWordLEDs(TEN);
     }
     
-    if (minute() >= 15 && minute() < 20 || minute() >= 45 && minute() < 50 ) { 
+    if (now.minute() >= 15 && now.minute() < 20 || now.minute() >= 45 && now.minute() < 50 ) { 
       lightWordLEDs(QUARTER);
     }
     
-    if (minute() >= 20 && minute() < 25 || minute() >= 40 && minute() < 45) {
+    if (now.minute() >= 20 && now.minute() < 25 || now.minute() >= 40 && now.minute() < 45) {
       lightWordLEDs(TWENTY);
     }
     
-    if (minute() >= 25 && minute() < 30 || minute() >= 35 && minute() < 40) {
+    if (now.minute() >= 25 && now.minute() < 30 || now.minute() >= 35 && now.minute() < 40) {
       lightWordLEDs(TWENTY_FIVE);
     }
     
-    if (minute() >= 30 && minute() < 35){
+    if (now.minute() >= 30 && now.minute() < 35){
       lightWordLEDs(HALF);
     }
     
-    if (minute() >= 5 && minute() < 35) { // this sets the 'past' light so it only lights up for first 30 mins
+    if (now.minute() >= 5 && now.minute() < 35) { // this sets the 'past' light so it only lights up for first 30 mins
       lightWordLEDs(PAST);
       lightHourLEDs(Hour_DST);
     }
     
-    if (minute() >= 35 && minute() < 60 && hour() <= 23) {
+    if (now.minute() >= 35 && now.minute() < 60 && now.hour() <= 23) {
       lightWordLEDs(TO);
       lightHourLEDs(Hour_DST+1);
     }
     
-    if (minute() >= 0 && minute() < 5) { // sets the 'oclock' light if the time is on the hour
+    if (now.minute() >= 0 && now.minute() < 5) { // sets the 'oclock' light if the time is on the hour
       lightHourLEDs(Hour_DST);
       lightWordLEDs(OCLOCK);
     }
@@ -302,7 +295,7 @@ void Clockset(){
     
     //*************** light up the Happy birthday on birthdays ******************
     
-    if(month() == 1 && day() ==6 || month() == 2 && day() ==14){
+    if(now.month() == 1 && now.day() ==6 || now.month() == 2 && now.day() ==14){
       lightBirthdayLEDs(HAPPY);
       lightBirthdayLEDs(BIRTHDAY);
       FastLED.show();
@@ -313,7 +306,7 @@ void Clockset(){
   }
   
   // **************animations for quarter to qurter past and half past the hour *******************
-  if(minute() == 45 && second() ==00){
+  if(now.minute() == 45 && now.second() ==00){
     FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
@@ -324,7 +317,7 @@ void Clockset(){
     FastLED.show();
   }
   
-  if(minute() == 15 && second() ==00){
+  if(now.minute() == 15 && now.second() ==00){
     FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
@@ -335,7 +328,7 @@ void Clockset(){
     FastLED.show();
   }
   
-  if(minute() == 30 && second() ==00){
+  if(now.minute() == 30 && now.second() ==00){
     FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
@@ -398,23 +391,24 @@ void Animation(){ /// animation to run on the hour
 }
 
 void hourAnimation() {
+  DateTime now = RTC.now();
 //animation for on the hour
-  if(minute() == 00 && second() >= 00 && second() <=8){
+  if(now.minute() == 00 && now.second() >= 00 && now.second() <=8){
     Animation();
   }
   
-  if(minute() == 00 && second() == 01){    // do a 10sec animation when it hits the hour
+  if(now.minute() == 00 && now.second() == 01){    // do a 10sec animation when it hits the hour
     lightWordLEDs(ITS); 
     FastLED.show();
   }
   
-  if(minute() == 00 && second() >1 && second() <=2){   
+  if(now.minute() == 00 && now.second() >1 && now.second() <=2){   
     lightWordLEDs(ITS);
     lightHourLEDs(Hour_DST);
     FastLED.show();
   }
   
-  if(minute() == 00 && second() >2 && second() <=8){    // do a 8sec animation when it hits the hour
+  if(now.minute() == 00 && now.second() >2 && now.second() <=8){    // do a 8sec animation when it hits the hour
     lightWordLEDs(ITS);
     lightHourLEDs(Hour_DST);
     lightWordLEDs(OCLOCK);
