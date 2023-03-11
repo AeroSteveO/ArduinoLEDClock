@@ -215,8 +215,8 @@ void Clockset(){
   // ********************* Calculate offset for Daylight saving hours (UK) *********************
   DateTime now = RTC.now();
   int y = now.year();                          // year in 4 digit format
-  uint8_t Mar_x = 31 - (4 + 5*y/4) % 7;      // will find the day of the last sunday in march
-  uint8_t Oct_x = 31 - (1 + 5*y/4) % 7;       // will find the day of the last sunday in Oct
+  uint8_t Mar_x = 31 - (4 + 5 * y / 4) % 7;      // will find the day of the last sunday in march
+  uint8_t Oct_x = 31 - (1 + 5 * y / 4) % 7;       // will find the day of the last sunday in Oct
   uint8_t DST;
                                              
   // *********** Test DST: BEGINS on last Sunday of March @ 2:00 AM *********
@@ -237,7 +237,7 @@ void Clockset(){
       DST = 0;
      }
   
-  Hour_DST = now.hour()+DST; //Add the DST to the hour to get correct DST
+  Hour_DST = now.hour() + DST; //Add the DST to the hour to get correct DST
   
   if(now.hour() == 23 && DST == 1) {
     Hour_DST = 00;
@@ -246,8 +246,8 @@ void Clockset(){
   // ********************************************************************************
   // the first 8 seconds of the hour is a special animation if its past this time set time as normal
   
-  if (now.minute() ==00  && now.second() > 8 || now.minute() >00)  {     
-    FastLED.clear (); // reset the LEDs prevents old times staying lit up 
+  FastLED.clear (true); // reset the LEDs prevents old times staying lit up 
+  if (now.minute() == 00  && now.second() > 8 || now.minute() > 00)  {     
     
     lightWordLEDs(ITS); // light up Its LEDs
     
@@ -269,8 +269,7 @@ void Clockset(){
     
     if (now.minute() >= 25 && now.minute() < 30 || now.minute() >= 35 && now.minute() < 40) {
       lightWordLEDs(TWENTY);
-      lightWordLEDs(FIVE);    // if functions to set the time minutes
-
+      lightWordLEDs(FIVE);
     }
     
     if (now.minute() >= 30 && now.minute() < 35){
@@ -307,7 +306,6 @@ void Clockset(){
   
   // **************animations for quarter to qurter past and half past the hour *******************
   if(now.minute() == 45 && now.second() ==00){
-    FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
     animateWordLEDs(QUARTER);
@@ -318,7 +316,6 @@ void Clockset(){
   }
   
   if(now.minute() == 15 && now.second() ==00){
-    FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
     animateWordLEDs(QUARTER);
@@ -329,7 +326,6 @@ void Clockset(){
   }
   
   if(now.minute() == 30 && now.second() ==00){
-    FastLED.clear ();
     animateWordLEDs(ITS);
     delay(500);
     animateWordLEDs(HALF);
@@ -515,7 +511,7 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     while (data.length() > 0)
     {
       int index = data.indexOf(',');
-      if (index == -1) // No space found
+      if (index == -1) // No comma found
       {
         timeStrings[StringCount++] = data;
         break;
@@ -537,13 +533,8 @@ void bluetoothCheckInput() { //If the message sent is the same as the trigger wo
     setTime(hour,minute,second,day,month,year);   //this sets the system time set to GMT without the daylight saving added. 
     RTC.adjust(now());
     
-    //String Dateset =  (String)day+"/"+month+"/"+year;  //create a string to update user interface to bluetooth 
-    //String Timeset = (String)hour+":"+minute+":"+second;
-    
     BT.println("Success");
-   // BT.println("Time set as: %d:%d:%d", hour, minute, second);
-   // BT.println("Date set as: %d/%d/%d",day, month, year);
-    
+
     newData = false;
     changingTime = false;
   }
