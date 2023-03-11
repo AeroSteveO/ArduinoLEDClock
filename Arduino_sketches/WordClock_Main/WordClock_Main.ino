@@ -55,7 +55,6 @@ enum wordLEDs {
   TEN,
   QUARTER,
   TWENTY,
-  TWENTY_FIVE,
   HALF,
   PAST,
   TO,
@@ -70,7 +69,6 @@ uint8_t wordArray[][11] = {
   {95,96,97},        // ten
   {100,101,102,103,104,105,106}, // quarter
   {89,90,91,92,93,94}, // twenty
-  {83,84,85,86,92,93,94,95,96,97}, // twenty five
   {83,84,85,86},    // half
   {72,73,74,75},    // past
   {63,64},          // to
@@ -270,7 +268,9 @@ void Clockset(){
     }
     
     if (now.minute() >= 25 && now.minute() < 30 || now.minute() >= 35 && now.minute() < 40) {
-      lightWordLEDs(TWENTY_FIVE);
+      lightWordLEDs(TWENTY);
+      lightWordLEDs(FIVE);    // if functions to set the time minutes
+
     }
     
     if (now.minute() >= 30 && now.minute() < 35){
