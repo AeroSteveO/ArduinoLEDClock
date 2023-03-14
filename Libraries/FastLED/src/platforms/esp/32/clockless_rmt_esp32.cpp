@@ -158,7 +158,6 @@ void ESP32RMTController::init(gpio_num_t pin)
     }
 
     gInitialized = true;
-    (void)espErr;
 }
 
 // -- Show this string of pixels
@@ -280,7 +279,6 @@ void IRAM_ATTR ESP32RMTController::startOnChannel(int channel)
         // -- Kick off the transmission
         tx_start();
     }
-    (void)espErr;
 }
 
 // -- Start RMT transmission
@@ -488,22 +486,22 @@ void IRAM_ATTR ESP32RMTController::fillNext(bool check_time)
     mLastFill = now;
 
     // -- Get the zero and one values into local variables
-    REGISTER uint32_t one_val = mOne.val;
-    REGISTER uint32_t zero_val = mZero.val;
+    register uint32_t one_val = mOne.val;
+    register uint32_t zero_val = mZero.val;
 
     // -- Use locals for speed
-    volatile REGISTER uint32_t * pItem =  mRMT_mem_ptr;
+    volatile register uint32_t * pItem =  mRMT_mem_ptr;
 
-    for (REGISTER int i = 0; i < PULSES_PER_FILL/8; i++) {
+    for (register int i = 0; i < PULSES_PER_FILL/8; i++) {
         if (mCur < mSize) {
 
             // -- Get the next four bytes of pixel data
-            REGISTER uint32_t pixeldata = mPixelData[mCur] << 24;
+            register uint32_t pixeldata = mPixelData[mCur] << 24;
             mCur++;
             
             // Shift bits out, MSB first, setting RMTMEM.chan[n].data32[x] to the 
             // rmt_item32_t value corresponding to the buffered bit value
-            for (REGISTER uint32_t j = 0; j < 8; j++) {
+            for (register uint32_t j = 0; j < 8; j++) {
                 *pItem++ = (pixeldata & 0x80000000L) ? one_val : zero_val;
                 // Replaces: RMTMEM.chan[mRMT_channel].data32[mCurPulse].val = val;
 
@@ -547,7 +545,7 @@ void ESP32RMTController::convertByte(uint32_t byteval)
 {
     // -- Write one byte's worth of RMT pulses to the big buffer
     byteval <<= 24;
-    for (REGISTER uint32_t j = 0; j < 8; j++) {
+    for (register uint32_t j = 0; j < 8; j++) {
         mBuffer[mCurPulse] = (byteval & 0x80000000L) ? mOne : mZero;
         byteval <<= 1;
         mCurPulse++;

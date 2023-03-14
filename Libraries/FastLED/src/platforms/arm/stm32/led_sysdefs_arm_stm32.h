@@ -20,12 +20,6 @@
 #define cli() nvic_globalirq_disable()
 #define sei() nvic_globalirq_enable()
 
-#elif defined(STM32F1)
-// stm32duino
-
-#define cli() noInterrupts()
-#define sei() interrupts()
-
 #else
 #error "Platform not supported"
 #endif
@@ -47,12 +41,8 @@
 
 // pgmspace definitions
 #define PROGMEM
-
-#if !defined(STM32F1)
-// The stm32duino core already defines these
 #define pgm_read_dword(addr) (*(const unsigned long *)(addr))
 #define pgm_read_dword_near(addr) pgm_read_dword(addr)
-#endif
 
 // Default to NOT using PROGMEM here
 #ifndef FASTLED_USE_PROGMEM
@@ -67,10 +57,6 @@ typedef volatile       uint8_t RwReg; /**< Read-Write 8-bit register (volatile u
 
 #if defined(STM32F2XX)
 #define F_CPU 120000000
-#elif defined(STM32F1)
-// F_CPU is already defined on stm32duino, but it's not constant.
-#undef F_CPU
-#define F_CPU 72000000
 #else
 #define F_CPU 72000000
 #endif

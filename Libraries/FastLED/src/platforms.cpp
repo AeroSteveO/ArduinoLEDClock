@@ -1,7 +1,3 @@
-/// @file platforms.cpp
-/// Platform-specific functions and variables
-
-/// Disables pragma messages and warnings
 #define FASTLED_INTERNAL
 
 
