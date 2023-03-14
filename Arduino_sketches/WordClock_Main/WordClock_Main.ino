@@ -224,7 +224,7 @@ void Clockset(){
   // ********************************************************************************
   // the first 8 seconds of the hour is a special animation if its past this time set time as normal
   
-  FastLED.clear (true); // reset the LEDs prevents old times staying lit up 
+  FastLED.clear(); // reset the LEDs prevents old times staying lit up 
   if (now.minute() == 00  && now.second() > 8 || now.minute() > 00)  {     
     
     lightWordLEDs(ITS); // light up Its LEDs
