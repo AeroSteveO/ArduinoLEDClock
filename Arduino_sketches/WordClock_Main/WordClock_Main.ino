@@ -5,6 +5,7 @@
 #include <FastLED.h>
 #include <DS3232RTC.h>      // https://github.com/JChristensen/DS3232RTC
 #include <SoftwareSerial.h>
+#include <Timezone.h>    // https://github.com/JChristensen/Timezone
 
 FASTLED_USING_NAMESPACE
 
@@ -109,8 +110,11 @@ uint8_t hourArray[][7] = {
 };
                     //  12 1 2 3 4 5 6 7 8 9 0 11
 uint8_t hourLengths[] = {6,3,3,5,4,4,3,5,5,4,3,6,
-                         6,3,3,5,4,4,3,5,5,4,3,6,6}; // this is the size of each of the above arrays for indexing the hourarray later in script                       
-
+                         6,3,3,5,4,4,3,5,5,4,3,6,6}; // this is the size of each of the above arrays for indexing the hourarray later in script
+                    
+TimeChangeRule usCDT = {"CDT", Second, Sun, Mar, 2, -300};
+TimeChangeRule usCST = {"CST", First, Sun, Nov, 2, -360};
+Timezone usCT(usCDT, usCST);
 
 // settings to implement on startup
 
@@ -127,6 +131,7 @@ void setup() {
     Serial.println("Couldn't find RTC");
     while(1) {};
   }
+
 
   setSyncProvider(getExternalTime());   // the function to get the time from the RTC
 
@@ -213,36 +218,9 @@ void loop() {
 
 void Clockset(){
   // ********************* Calculate offset for Daylight saving hours (UK) *********************
-  DateTime now = RTC.now();
+  DateTime now = usCT.toLocal(RTC.now().unixtime());
   int y = now.year();                          // year in 4 digit format
-  uint8_t Mar_x = 31 - (4 + 5 * y / 4) % 7;      // will find the day of the last sunday in march
-  uint8_t Oct_x = 31 - (1 + 5 * y / 4) % 7;       // will find the day of the last sunday in Oct
-  uint8_t DST;
-                                             
-  // *********** Test DST: BEGINS on last Sunday of March @ 2:00 AM *********
-  if(now.month() == 3 && now.day() == Mar_x && now.hour() >= 2) {                                   
-      DST = 1;                           // Daylight Savings Time is TRUE (add one hour)
-     }
-     
-  if((now.month() == 3 && now.day() > Mar_x) || now.month() > 3) {
-      DST = 1;
-     }
-     
-  // ************* Test DST: ENDS on Last Sunday of Oct @ 2:00 AM ************  
-  if(now.month() == 10 && now.day() == Oct_x && now.hour() >= 2) {
-      DST = 0;                            // daylight savings time is FALSE (Standard time)
-     }
-     
-  if((now.month() == 10 && now.day() > Oct_x) || now.month() > 10 || now.month() < 3 || now.month() == 3 && now.day() < Mar_x || now.month() == 3 && now.day() == Mar_x && now.hour() < 2) {
-      DST = 0;
-     }
-  
-  Hour_DST = now.hour() + DST; //Add the DST to the hour to get correct DST
-  
-  if(now.hour() == 23 && DST == 1) {
-    Hour_DST = 00;
-  }
-  
+    
   // ********************************************************************************
   // the first 8 seconds of the hour is a special animation if its past this time set time as normal
   
@@ -278,16 +256,16 @@ void Clockset(){
     
     if (now.minute() >= 5 && now.minute() < 35) { // this sets the 'past' light so it only lights up for first 30 mins
       lightWordLEDs(PAST);
-      lightHourLEDs(Hour_DST);
+      lightHourLEDs(now.hour());
     }
     
     if (now.minute() >= 35 && now.minute() < 60 && now.hour() <= 23) {
       lightWordLEDs(TO);
-      lightHourLEDs(Hour_DST+1);
+      lightHourLEDs(now.hour()+1);
     }
     
     if (now.minute() >= 0 && now.minute() < 5) { // sets the 'oclock' light if the time is on the hour
-      lightHourLEDs(Hour_DST);
+      lightHourLEDs(now.hour());
       lightWordLEDs(OCLOCK);
     }
     
@@ -311,7 +289,7 @@ void Clockset(){
     animateWordLEDs(QUARTER);
     animateWordLEDs(TO);
     delay(500);
-    animateHourLEDs(Hour_DST+1);
+    animateHourLEDs(now.hour()+1);
     FastLED.show();
   }
   
@@ -321,7 +299,7 @@ void Clockset(){
     animateWordLEDs(QUARTER);
     animateWordLEDs(PAST);
     delay(500);
-    animateHourLEDs(Hour_DST);
+    animateHourLEDs(now.hour());
     FastLED.show();
   }
   
@@ -331,7 +309,7 @@ void Clockset(){
     animateWordLEDs(HALF);
     animateWordLEDs(PAST);
     delay(500);
-    animateHourLEDs(Hour_DST);
+    animateHourLEDs(now.hour());
     FastLED.show();
   }
 }   //end of clock set
